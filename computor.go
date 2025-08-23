@@ -74,15 +74,15 @@ func processSide(side string, sign float64, terms map[int]float64) {
 		// removed the "X^" from exponent
 		exp = strings.TrimPrefix(exp, "X^")
 
-		// convert the string to a numeric value
-		coeffN, _ := strconv.ParseFloat(coeff, 64)
-		expInt, _ := strconv.Atoi(exp) 
+		// convert the string to a numeric value to be able to make the operation.
+		convCoeff, _ := strconv.ParseFloat(coeff, 64)
+		convExp, _ := strconv.Atoi(exp) 
 
-		// fmt.Println("coeffN: ", coeffN)
-		// fmt.Println("expInt: ", expInt)
+		// fmt.Println("convCoeff: ", convCoeff)
+		// fmt.Println("convExp: ", convExp)
 		// fmt.Println("sign: ", sign)
 
-		terms[expInt] += sign * coeffN
+		terms[convExp] += sign * convCoeff
 	}
 
 }
