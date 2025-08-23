@@ -68,7 +68,10 @@ func processSide(side string, sign float64, terms map[int]float64) {
 			continue
 		}
 
+
+
 		coeff := strings.TrimSpace(pieces[0])
+		coeff = strings.ReplaceAll(coeff, " ", "")
 		exp := strings.TrimSpace(pieces[1])
 
 		// removed the "X^" from exponent
@@ -77,6 +80,8 @@ func processSide(side string, sign float64, terms map[int]float64) {
 		// convert the string to a numeric value to be able to make the operation.
 		convCoeff, _ := strconv.ParseFloat(coeff, 64)
 		convExp, _ := strconv.Atoi(exp) 
+
+		fmt.Println("Raw term:", term, "| coeff:", coeff, "| exp:", exp)
 
 		// fmt.Println("convCoeff: ", convCoeff)
 		// fmt.Println("convExp: ", convExp)
