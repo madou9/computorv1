@@ -10,4 +10,4 @@ For longer development sessions, it's often easier to open an interactive shell 
 
 bash
 # Start an interactive Bash shell in the Go container
-docker run -it --rm -v "$(pwd)":/app -w /app golang bash
+docker run -it --rm -v $(pwd):/app -w /app golang bash
