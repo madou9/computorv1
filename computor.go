@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
-	// "strconv"
+	"strconv"
 )
 
 /*
@@ -50,14 +50,11 @@ func parseEquation(eq string) map[int]float64 {
     return terms
 }
 
-func processSide(side string, sign int, terms map[int]float64) {
-	// fmt.Println("side: ", side)
-	// fmt.Println("sign: ", sign)
-	// fmt.Println("terms: ", terms)
+func processSide(side string, sign float64, terms map[int]float64) {
 	// normalize the input so all terms can be split with a single delimiter ("+") instead of doing two separate splits for + and -
 	normalized := strings.ReplaceAll(side, "-", "+-")
     parts := strings.Split(normalized, "+")
-	fmt.Println("parts: ", parts)
+	// fmt.Println("parts: ", parts)
 
 	for _, term := range parts {
         term = strings.TrimSpace(term)
@@ -68,16 +65,25 @@ func processSide(side string, sign int, terms map[int]float64) {
 		pieces := strings.Split(term, "*")
 		if (len(pieces) != 2){
 			log.Println("Invalid term: ", term)
+			continue
 		}
 
 		coeff := strings.TrimSpace(pieces[0])
 		exp := strings.TrimSpace(pieces[1])
-		fmt.Println("coeff: ", coeff)
-		fmt.Println("exp: ", exp)
-		fmt.Println("pieces: ", pieces)
-	}
 
-	fmt.Println("parts1: ", parts)
+		// removed the "X^" from exponent
+		exp = strings.TrimPrefix(exp, "X^")
+
+		// convert the string to a numeric value
+		coeffN, _ := strconv.ParseFloat(coeff, 64)
+		expInt, _ := strconv.Atoi(exp) 
+
+		// fmt.Println("coeffN: ", coeffN)
+		// fmt.Println("expInt: ", expInt)
+		// fmt.Println("sign: ", sign)
+
+		terms[expInt] += sign * coeffN
+	}
 
 }
 
