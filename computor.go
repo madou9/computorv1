@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
-	"strings"
+	"sort"
 	"strconv"
+	"strings"
 )
 
 /*
@@ -24,6 +26,8 @@ func main() {
 	fmt.Println("Input equation: ", equation)
 
 	terms := parseEquation(equation)
+	reducedTerms, _ := reduceEquation(terms)
+	fmt.Println("reduced terms : ", reducedTerms)
 	fmt.Println("terms : ", terms)
 	// reduceTerms = reduceEquation(terms)
 }
@@ -68,8 +72,6 @@ func processSide(side string, sign float64, terms map[int]float64) {
 			continue
 		}
 
-
-
 		coeff := strings.TrimSpace(pieces[0])
 		coeff = strings.ReplaceAll(coeff, " ", "")
 		exp := strings.TrimSpace(pieces[1])
@@ -92,13 +94,28 @@ func processSide(side string, sign float64, terms map[int]float64) {
 
 }
 
+func reduceEquation(t map[int]float64)(map[int]float64, string){
+	reduced := make(map[int]float64)
 
-// func reduceEquation(t map[int]float64)float64{
-// fmt.Println("reduce equation")
-// // 	Input: the terms map.
-// // Output: a reduced version with combined coefficients (e.g. if you had two X^2 terms, they’re added together).
-// // What it does: ensures the polynomial is in its simplest reduced form.
-// }
+	for exp, coeff := range t {
+		if math.Abs(coeff) > 1e-9 {
+			reduced[exp] = coeff
+		}
+		fmt.Println("reduced: ", reduced)
+	}
+
+    // Build string: sort exponents ascending
+    exponents := make([]int, 0, len(reduced))
+	fmt.Println("exponents0: ", exponents)
+    for exp := range reduced {
+		fmt.Println("exp: ", exp)
+        exponents = append(exponents, exp)
+    }
+	sort.Ints(exponents) // Sort exponents in ascending order 0 ,1 , 2
+	fmt.Println("exponents: ", exponents)
+
+	return reduced, "reduced equation"
+}
 
 // func getDegree(t map[int]float64) int{
 // 	fmt.Println("get equation")
