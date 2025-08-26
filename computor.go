@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -23,26 +22,22 @@ func main() {
 		fmt.Println("Please check your argument")
 	}
 	equation := os.Args[1]
-	fmt.Println("Input equation: ", equation)
+	// fmt.Println("Input equation: ", equation)
 
 	terms := parseEquation(equation)
 	reducedTerms, _ := reduceEquation(terms)
+	getDegree(reducedTerms)
+
 	fmt.Println("reduced terms : ", reducedTerms)
-	fmt.Println("terms : ", terms)
 	// reduceTerms = reduceEquation(terms)
 }
 
 func parseEquation(eq string) map[int]float64 {
-    fmt.Println("parse equation:", eq)
 
     // Split input into left and right parts
     parts := strings.SplitN(eq, "=", 2)
     left := strings.TrimSpace(parts[0])
     right := strings.TrimSpace(parts[1])
-
-	// print the left and right
-	fmt.Println("left: ", left)
-	fmt.Println("right: ", right)
 
 	// store element in terms
     terms := make(map[int]float64)
@@ -82,12 +77,7 @@ func processSide(side string, sign float64, terms map[int]float64) {
 		// convert the string to a numeric value to be able to make the operation.
 		convCoeff, _ := strconv.ParseFloat(coeff, 64)
 		convExp, _ := strconv.Atoi(exp) 
-
-		fmt.Println("Raw term:", term, "| coeff:", coeff, "| exp:", exp)
-
-		// fmt.Println("convCoeff: ", convCoeff)
-		// fmt.Println("convExp: ", convExp)
-		// fmt.Println("sign: ", sign)
+		// fmt.Println("Raw term:", term, "| coeff:", coeff, "| exp:", exp)
 
 		terms[convExp] += sign * convCoeff
 	}
@@ -96,33 +86,53 @@ func processSide(side string, sign float64, terms map[int]float64) {
 
 func reduceEquation(t map[int]float64)(map[int]float64, string){
 	reduced := make(map[int]float64)
-
 	for exp, coeff := range t {
-		if math.Abs(coeff) > 1e-9 {
-			reduced[exp] = coeff
-		}
-		fmt.Println("reduced: ", reduced)
+		reduced[exp] = coeff
 	}
-
     // Build string: sort exponents ascending
     exponents := make([]int, 0, len(reduced))
-	fmt.Println("exponents0: ", exponents)
     for exp := range reduced {
-		fmt.Println("exp: ", exp)
         exponents = append(exponents, exp)
     }
 	sort.Ints(exponents) // Sort exponents in ascending order 0 ,1 , 2
-	fmt.Println("exponents: ", exponents)
 
-	return reduced, "reduced equation"
+	var builder strings.Builder
+	 // Build the reduced equation string
+	for i, exp := range exponents {
+		coeff := reduced[exp]
+		sign := "+"
+		if coeff < 0 {
+			sign = "-"
+			coeff = -coeff
+	}
+	if i > 0 {
+		builder.WriteString(" " + sign + " ")
+	}else if sign == "-" {
+		builder.WriteString("-")
+	}
+	builder.WriteString(fmt.Sprintf("%g * X^%d", coeff, exp))
+}
+	builder.WriteString(" = 0")
+	
+	fmt.Println("Reduced form: ", builder.String())
+
+	return reduced, builder.String()
 }
 
-// func getDegree(t map[int]float64) int{
-// 	fmt.Println("get equation")
-// // 	Input: reduced terms.
-// // Output: the highest exponent with a non-zero coefficient.
-// // What it does: determines the polynomial degree.
-// }
+func getDegree(t map[int]float64) int{
+
+	if len(t) == 0 {
+		return 0
+	}
+	degree := 0
+	for exp, _ := range t {
+		if exp > degree {
+			degree = exp
+		}
+	}
+	fmt.Printf("Polynomial degree: %d\n", degree)
+	return degree
+}
 
 // func solveEquation(t map[int]float64) []string{
 // fmt.Println("solve equation")
