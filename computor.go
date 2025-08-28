@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"math"
 )
 
 /*
@@ -26,7 +27,8 @@ func main() {
 
 	terms := parseEquation(equation)
 	reducedTerms, _ := reduceEquation(terms)
-	getDegree(reducedTerms)
+	degree := getDegree(reducedTerms)
+	solveEquation(reducedTerms, degree)
 
 	fmt.Println("reduced terms : ", reducedTerms)
 	// reduceTerms = reduceEquation(terms)
@@ -134,21 +136,51 @@ func getDegree(t map[int]float64) int{
 	return degree
 }
 
-// func solveEquation(t map[int]float64) []string{
-// fmt.Println("solve equation")
+func solveEquation(t map[int]float64, degree int){
+	// fmt.Printf("terms : %v\n degree : %v\n", t, degree)
+	switch degree {
+		case 0:
+			if math.Abs(t[0]) < 1e-8 {
+				fmt.Println("All real numbers are solutions")
+			} else {
+				fmt.Println("No solution")
+			}
+		case 1:
+			a := t[1]
+			b := t[0]
+			x := -b / (2 * a)
+			fmt.Printf("The solution is : %v\n", x)
+		case 2:
+			a := t[2]
+			b := t[1]
+			c := t[0]
+			discriminant := b*b -4 * a * c
+			fmt.Printf("discriminant: %v\n : ", discriminant)
+			if discriminant > 0 {
+				sqrt := mySqrt(discriminant)
+				x1 := (-b + sqrt) / (2 * a)
+				x2 := (-b - sqrt) / (2 * a)
+				fmt.Printf("Discriminant is strictly positive, the two solutions are:\n%v\n%v\n", x1, x2)	
+			}
+	}
 
-// // solveEquation(terms map[int]float64) []string
-// // Input: reduced terms.
-// // Output: a slice of solution strings.
-// // What it does:
-// // Checks the degree.
-// // If degree 0 → infinite/no solution.
-// // If degree 1 → solve linear (-b/a).
-// // If degree 2 → call quadratic solver.
-// // If degree > 2 → return "I can’t solve".
-// }
-
-func printResult(){
-	fmt.Println("print Result")
 }
 
+func mySqrt(x float64) float64 {
+		if x == 0 {
+			return 0
+		}
+
+		guess := x / 2
+		epsilon := 1e-3
+
+		for {
+			newguess := (guess + x/guess) / 2
+			if math.Abs(newguess - guess) < epsilon {
+				return newguess
+			}
+			guess = newguess
+
+			fmt.Println("newGuess: ", newguess)
+		}
+	}
