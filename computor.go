@@ -11,11 +11,11 @@ import (
 )
 
 /*
-Start → get input from CLI.
+	Start -> get input from CLI.
 
-Parse → Reduce → Get Degree → Solve → Print.
+	Parse -> Reduce -> Get Degree -> Solve -> Print.
 
-End.
+	End.
 */
 
 func main() {
@@ -149,7 +149,7 @@ func solveEquation(t map[int]float64, degree int){
 			a := t[1]
 			b := t[0]
 			x := -b / a
-			fmt.Printf("The solution is : \n%v\n", x)
+			fmt.Printf("The solution is: \n%v\n", x)
 		case 2:
 			a := t[2]
 			b := t[1]
@@ -158,9 +158,9 @@ func solveEquation(t map[int]float64, degree int){
 			// fmt.Printf("discriminant: %v\n : ", discriminant)
 			if discriminant > 0 {
 				sqrt := mySqrt(discriminant)
-				x1 := (-b + sqrt) / (2 * a)
-				x2 := (-b - sqrt) / (2 * a)
-				fmt.Printf("Discriminant is strictly positive, the two solutions are:\n%f\n%f\n", x2, x1)	
+				x1 := (-b - sqrt) / (2 * a)
+				x2 := (-b + sqrt) / (2 * a)
+				fmt.Printf("Discriminant is strictly positive, the two solutions are: \n%f\n%f\n", x1, x2)	
 			} else if math.Abs(discriminant) < 1e-8 {
 				x := -b / (2 * a)
 				fmt.Println("Discriminant is zero, one real solution:")
