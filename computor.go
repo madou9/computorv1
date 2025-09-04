@@ -30,7 +30,7 @@ func main() {
 	degree := getDegree(reducedTerms)
 	solveEquation(reducedTerms, degree)
 
-	fmt.Println("reduced terms : ", reducedTerms)
+	// fmt.Println("reduced terms : ", reducedTerms)
 	// reduceTerms = reduceEquation(terms)
 }
 
@@ -148,20 +148,26 @@ func solveEquation(t map[int]float64, degree int){
 		case 1:
 			a := t[1]
 			b := t[0]
-			x := -b / (2 * a)
-			fmt.Printf("The solution is : %v\n", x)
+			x := -b / a
+			fmt.Printf("The solution is : \n%v\n", x)
 		case 2:
 			a := t[2]
 			b := t[1]
 			c := t[0]
 			discriminant := b*b -4 * a * c
-			fmt.Printf("discriminant: %v\n : ", discriminant)
+			// fmt.Printf("discriminant: %v\n : ", discriminant)
 			if discriminant > 0 {
 				sqrt := mySqrt(discriminant)
 				x1 := (-b + sqrt) / (2 * a)
 				x2 := (-b - sqrt) / (2 * a)
-				fmt.Printf("Discriminant is strictly positive, the two solutions are:\n%v\n%v\n", x1, x2)	
+				fmt.Printf("Discriminant is strictly positive, the two solutions are:\n%f\n%f\n", x2, x1)	
+			} else if math.Abs(discriminant) < 1e-8 {
+				x := -b / (2 * a)
+				fmt.Println("Discriminant is zero, one real solution:")
+				fmt.Printf("%f\n", x)
 			}
+		default:
+			fmt.Println("The polynomial degree is strictly greater than 2, I can't solve.")
 	}
 
 }
@@ -172,7 +178,7 @@ func mySqrt(x float64) float64 {
 		}
 
 		guess := x / 2
-		epsilon := 1e-3
+		epsilon := 1e-7
 
 		for {
 			newguess := (guess + x/guess) / 2
@@ -181,6 +187,6 @@ func mySqrt(x float64) float64 {
 			}
 			guess = newguess
 
-			fmt.Println("newGuess: ", newguess)
+			// fmt.Println("newGuess: ", newguess)
 		}
 	}
