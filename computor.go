@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"math"
 )
 
 /*
@@ -147,7 +146,7 @@ func solveEquation(t map[int]float64, degree int){
 	// fmt.Printf("terms : %v\n degree : %v\n", t, degree)
 	switch degree {
 		case 0:
-			if math.Abs(t[0]) < 1e-8 {
+			if Abs(t[0]) < 1e-8 {
 				fmt.Println("All real numbers are solutions")
 			} else {
 				fmt.Println("No solution")
@@ -168,7 +167,7 @@ func solveEquation(t map[int]float64, degree int){
 				x1 := (-b - sqrt) / (2 * a)
 				x2 := (-b + sqrt) / (2 * a)
 				fmt.Printf("Discriminant is strictly positive, the two solutions are: \n%f\n%f\n", x1, x2)	
-			} else if math.Abs(discriminant) < 1e-8 {
+			} else if Abs(discriminant) < 1e-8 {
 				x := -b / (2 * a)
 				fmt.Println("Discriminant is zero, one real solution:")
 				fmt.Printf("%f\n", x)
@@ -184,16 +183,23 @@ func mySqrt(x float64) float64 {
 			return 0
 		}
 
-		guess := x / 2
-		epsilon := 1e-7
+		guess := x / 2 // initial guess
+		epsilon := 1e-7 // precision threshold
 
 		for {
 			newguess := (guess + x/guess) / 2
-			if math.Abs(newguess - guess) < epsilon {
+			if Abs(newguess - guess) < epsilon {
 				return newguess
 			}
-			guess = newguess
+			guess = newguess // update gues
 
 			// fmt.Println("newGuess: ", newguess)
 		}
 	}
+
+func Abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
