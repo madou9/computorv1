@@ -36,6 +36,13 @@ func main() {
 
 func parseEquation(eq string) map[int]float64 {
 
+	// check if equation contains different than X, numbers, +, -, *, ^, = and spaces
+	allowedChars := "0123456789Xx+-*=^ ."
+	for _, char := range eq {
+		 if strings.IndexRune(allowedChars, char) == -1 {
+			log.Fatalf("Invalid character in equation: %c", char)
+		 }
+	}
     // Split input into left and right parts
     parts := strings.SplitN(eq, "=", 2)
     left := strings.TrimSpace(parts[0])
