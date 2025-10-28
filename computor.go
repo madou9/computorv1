@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -17,33 +16,41 @@ import (
 	End.
 */
 
+const EPSILON = 1e-8
+
 func main() {
 	if (len(os.Args) < 2) {
 		fmt.Println("Please check your argument")
 	}
 	equation := os.Args[1]
+	// fmt.Println("Input equation: ", equation)
+
 	terms := parseEquation(equation)
-	fmt.Println("Parsed terms: ", terms)
 	reducedTerms, _ := reduceEquation(terms)
 	degree := getDegree(reducedTerms)
 	solveEquation(reducedTerms, degree)
+
+	// fmt.Println("reduced terms : ", reducedTerms)
+	// reduceTerms = reduceEquation(terms)
 }
 
-// Parse the input equation and return a map of exponents to coefficients
 func parseEquation(eq string) map[int]float64 {
 
-	// check if equation contains different than X, numbers, +, -, *, ^, = and spaces
-	allowedChars := "0123456789Xx+-*=^ ."
-	for _, char := range eq {
-		 if strings.IndexRune(allowedChars, char) == -1 {
-			log.Fatalf("Invalid character in equation: %c", char)
-		 }
-	}
     // Split input into left and right parts
     parts := strings.SplitN(eq, "=", 2)
-    left := strings.TrimSpace(parts[0])
-    right := strings.TrimSpace(parts[1])
-
+	var left , right string
+	if len(parts) == 1 {
+		// no '=' found, treat entire input as left side
+		left = strings.TrimSpace(parts[0])
+		right = "0"
+	} else if len(parts) == 2 {
+		// normal case with '='
+		left = strings.TrimSpace(parts[0])
+		right = strings.TrimSpace(parts[1])
+	} else {
+		fmt.Println("Invalid equation format")
+		os.Exit(1)
+	}
 	// store element in terms
     terms := make(map[int]float64)
 
@@ -54,60 +61,70 @@ func parseEquation(eq string) map[int]float64 {
     return terms
 }
 
-// Process each side of the equation and update the terms map
 func processSide(side string, sign float64, terms map[int]float64) {
 	// normalize the input so all terms can be split with a single delimiter ("+") instead of doing two separate splits for + and -
 	normalized := strings.ReplaceAll(side, "-", "+-")
     parts := strings.Split(normalized, "+")
+	// fmt.Println("parts: ", parts)
 
 	for _, term := range parts {
         term = strings.TrimSpace(term)
         if term == "" {
             continue
         }
-		// check the leng of each term 
-		pieces := strings.Split(term, "*")
-		if (len(pieces) != 2){
-			log.Println("Invalid term: ", term)
+
+		// remove internal spaces for simpler parsing
+		s := strings.ReplaceAll(term, " ", "")
+		if s == "" || s == "+" || s == "-" {
+			continue
+		}
+		// work in upper case for 'x' vs 'X'
+        u := strings.ToUpper(s)
+
+		// contains X ?
+		if strings.Contains(u, "X") {
+			partsX := strings.SplitN(u, "X", 2)
+			coeffPart := strings.TrimSuffix(partsX[0], "*")
+			// fmt.Println("coeffPart: ", coeffPart)
+			// fmt.Println("partsX: ", partsX)
+			// get coefficient
+			var coeff float64
+			if coeffPart == "" || coeffPart == "+" {
+				coeff = 1
+			} else if coeffPart == "-" {
+				coeff = -1
+			} else {
+				// parse coefficient
+				c, _ := strconv.ParseFloat(coeffPart, 64)
+				coeff = c
+			}
+			expPart := "1"
+			if len(partsX) > 1 && strings.HasPrefix(partsX[1], "^"){
+				expPart = partsX[1][1:] // remove '^'
+				if expPart == "" {
+					expPart = "1"
+				}
+			}
+			exp, _ := strconv.Atoi(expPart)
+			terms[exp] += sign * coeff
 			continue
 		}
 
-		coeff := strings.TrimSpace(pieces[0])
-		coeff = strings.ReplaceAll(coeff, " ", "")
-		exp := strings.TrimSpace(pieces[1])
-
-		// removed the "X^" from exponent
-		exp = strings.TrimPrefix(exp, "X^")
-
-		// convert the string to a numeric value to be able to make the operation.
-		convCoeff, err := strconv.ParseFloat(coeff, 64)
-		if err != nil {
-			log.Println("Invalid coefficient:", coeff)
-			continue
-		}
-		convExp, err := strconv.Atoi(exp)
-		if err != nil {
-			log.Println("Invalid exponent:", exp)
-			continue
-		}
-
-		terms[convExp] += sign * convCoeff
+		// no X: treat as constant term (exponent 0)
+		constPart := strings.TrimSuffix(u, "*")
+		constCoeff, _ := strconv.ParseFloat(constPart, 64)
+		terms[0] += sign * constCoeff
+		continue
 	}
 
 }
 
-// Reduce the equation and return the reduced terms and the reduced equation string
+
 func reduceEquation(t map[int]float64)(map[int]float64, string){
-	// Remove zero coefficient
-	// Create a new map to store reduced terms
-	// and avoid modifying the map while iterating over it
 	reduced := make(map[int]float64)
-	fmt.Println("t before reduction: ", t)
 	for exp, coeff := range t {
 		reduced[exp] = coeff
 	}
-	fmt.Println("Terms after reduction: ", reduced)
-
     // Build string: sort exponents ascending
     exponents := make([]int, 0, len(reduced))
     for exp := range reduced {
@@ -116,29 +133,42 @@ func reduceEquation(t map[int]float64)(map[int]float64, string){
 	sort.Ints(exponents) // Sort exponents in ascending order 0 ,1 , 2
 
 	var builder strings.Builder
+	firstTerm := true
 	 // Build the reduced equation string
-	for i, exp := range exponents {
-		coeff := reduced[exp]
-		sign := "+"
-		if coeff < 0 {
-			sign = "-"
-			coeff = -coeff
-	}
-	if i > 0 {
-		builder.WriteString(" " + sign + " ")
-	}else if sign == "-" {
-		builder.WriteString("-")
-	}
-	builder.WriteString(fmt.Sprintf("%g * X^%d", coeff, exp))
-}
-	builder.WriteString(" = 0")
+	for _, exp := range exponents {
+			coeff := reduced[exp]
+			
+			// Skip zero coefficients
+			if Abs(coeff) < EPSILON {
+				continue
+			}
+			
+			sign := "+"
+			if coeff < 0 {
+				sign = "-"
+				coeff = -coeff
+			}
+			
+			if !firstTerm {
+				builder.WriteString(" " + sign + " ")
+			} else if sign == "-" {
+				builder.WriteString("-")
+			}
+			
+			builder.WriteString(fmt.Sprintf("%g * X^%d", coeff, exp))
+			firstTerm = false
+		}
+    // Handle case where all coefficients are zero
+    if firstTerm {
+        builder.WriteString("0")
+    }
+	builder.WriteString("= 0")
 	
-	fmt.Println("Reduced form: ", builder.String())
+	fmt.Println("Reduced form:", builder.String())
 
 	return reduced, builder.String()
 }
 
-// Get the degree of the polynomial from the terms map
 func getDegree(t map[int]float64) int{
 
 	if len(t) == 0 {
@@ -154,34 +184,46 @@ func getDegree(t map[int]float64) int{
 	return degree
 }
 
-// Solve the equation based on its degree
 func solveEquation(t map[int]float64, degree int){
+	// fmt.Printf("terms : %v\n degree : %v\n", t, degree)
 	switch degree {
 		case 0:
-			if Abs(t[0]) < 1e-8 {
-				fmt.Println("All real numbers are solutions")
+			if Abs(t[0]) < EPSILON {
+				fmt.Println("Each real number is a solutions")
 			} else {
-				fmt.Println("No solution")
+				fmt.Println("There is No solution")
 			}
 		case 1:
 			a := t[1]
 			b := t[0]
 			x := -b / a
+			// Handle -0 display to 0
+			if Abs(x) < EPSILON {
+				x = 0
+			}
 			fmt.Printf("The solution is: \n%v\n", x)
 		case 2:
 			a := t[2]
 			b := t[1]
 			c := t[0]
 			discriminant := b*b -4 * a * c
+			// fmt.Printf("discriminant: %v\n : ", discriminant)
 			if discriminant > 0 {
 				sqrt := mySqrt(discriminant)
 				x1 := (-b - sqrt) / (2 * a)
 				x2 := (-b + sqrt) / (2 * a)
 				fmt.Printf("Discriminant is strictly positive, the two solutions are: \n%f\n%f\n", x1, x2)	
-			} else if Abs(discriminant) < 1e-8 {
+			} else if Abs(discriminant) < EPSILON {
 				x := -b / (2 * a)
 				fmt.Println("Discriminant is zero, one real solution:")
 				fmt.Printf("%f\n", x)
+			}else {
+			// COMPLEX solutions
+				realPart := -b / (2 * a)
+				imagPart := mySqrt(-discriminant) / (2 * a)
+				fmt.Println("Discriminant is negative, the two complex solutions are:")
+				fmt.Printf("%f - %f * i\n", realPart, imagPart)
+				fmt.Printf("%f + %f * i\n", realPart, imagPart)
 			}
 		default:
 			fmt.Println("The polynomial degree is strictly greater than 2, I can't solve.")
@@ -189,25 +231,25 @@ func solveEquation(t map[int]float64, degree int){
 
 }
 
-// Compute the square root of a number using the Newton-Raphson method
 func mySqrt(x float64) float64 {
 		if x == 0 {
 			return 0
 		}
 
 		guess := x / 2 // initial guess
-		epsilon := 1e-7 // precision threshold
+		epsilon := EPSILON // precision threshold
 
 		for {
 			newguess := (guess + x/guess) / 2
 			if Abs(newguess - guess) < epsilon {
 				return newguess
 			}
-			guess = newguess // update guess
+			guess = newguess // update gues
+
+			// fmt.Println("newGuess: ", newguess)
 		}
 	}
 
-// Compute the absolute value of a float64 number
 func Abs(x float64) float64 {
 	if x < 0 {
 		return -x
