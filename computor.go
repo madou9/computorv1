@@ -22,17 +22,14 @@ func main() {
 		fmt.Println("Please check your argument")
 	}
 	equation := os.Args[1]
-	// fmt.Println("Input equation: ", equation)
-
 	terms := parseEquation(equation)
+	fmt.Println("Parsed terms: ", terms)
 	reducedTerms, _ := reduceEquation(terms)
 	degree := getDegree(reducedTerms)
 	solveEquation(reducedTerms, degree)
-
-	// fmt.Println("reduced terms : ", reducedTerms)
-	// reduceTerms = reduceEquation(terms)
 }
 
+// Parse the input equation and return a map of exponents to coefficients
 func parseEquation(eq string) map[int]float64 {
 
 	// check if equation contains different than X, numbers, +, -, *, ^, = and spaces
@@ -57,11 +54,11 @@ func parseEquation(eq string) map[int]float64 {
     return terms
 }
 
+// Process each side of the equation and update the terms map
 func processSide(side string, sign float64, terms map[int]float64) {
 	// normalize the input so all terms can be split with a single delimiter ("+") instead of doing two separate splits for + and -
 	normalized := strings.ReplaceAll(side, "-", "+-")
     parts := strings.Split(normalized, "+")
-	// fmt.Println("parts: ", parts)
 
 	for _, term := range parts {
         term = strings.TrimSpace(term)
@@ -83,20 +80,34 @@ func processSide(side string, sign float64, terms map[int]float64) {
 		exp = strings.TrimPrefix(exp, "X^")
 
 		// convert the string to a numeric value to be able to make the operation.
-		convCoeff, _ := strconv.ParseFloat(coeff, 64)
-		convExp, _ := strconv.Atoi(exp) 
-		// fmt.Println("Raw term:", term, "| coeff:", coeff, "| exp:", exp)
+		convCoeff, err := strconv.ParseFloat(coeff, 64)
+		if err != nil {
+			log.Println("Invalid coefficient:", coeff)
+			continue
+		}
+		convExp, err := strconv.Atoi(exp)
+		if err != nil {
+			log.Println("Invalid exponent:", exp)
+			continue
+		}
 
 		terms[convExp] += sign * convCoeff
 	}
 
 }
 
+// Reduce the equation and return the reduced terms and the reduced equation string
 func reduceEquation(t map[int]float64)(map[int]float64, string){
+	// Remove zero coefficient
+	// Create a new map to store reduced terms
+	// and avoid modifying the map while iterating over it
 	reduced := make(map[int]float64)
+	fmt.Println("t before reduction: ", t)
 	for exp, coeff := range t {
 		reduced[exp] = coeff
 	}
+	fmt.Println("Terms after reduction: ", reduced)
+
     // Build string: sort exponents ascending
     exponents := make([]int, 0, len(reduced))
     for exp := range reduced {
@@ -127,6 +138,7 @@ func reduceEquation(t map[int]float64)(map[int]float64, string){
 	return reduced, builder.String()
 }
 
+// Get the degree of the polynomial from the terms map
 func getDegree(t map[int]float64) int{
 
 	if len(t) == 0 {
@@ -142,8 +154,8 @@ func getDegree(t map[int]float64) int{
 	return degree
 }
 
+// Solve the equation based on its degree
 func solveEquation(t map[int]float64, degree int){
-	// fmt.Printf("terms : %v\n degree : %v\n", t, degree)
 	switch degree {
 		case 0:
 			if Abs(t[0]) < 1e-8 {
@@ -161,7 +173,6 @@ func solveEquation(t map[int]float64, degree int){
 			b := t[1]
 			c := t[0]
 			discriminant := b*b -4 * a * c
-			// fmt.Printf("discriminant: %v\n : ", discriminant)
 			if discriminant > 0 {
 				sqrt := mySqrt(discriminant)
 				x1 := (-b - sqrt) / (2 * a)
@@ -178,6 +189,7 @@ func solveEquation(t map[int]float64, degree int){
 
 }
 
+// Compute the square root of a number using the Newton-Raphson method
 func mySqrt(x float64) float64 {
 		if x == 0 {
 			return 0
@@ -191,12 +203,11 @@ func mySqrt(x float64) float64 {
 			if Abs(newguess - guess) < epsilon {
 				return newguess
 			}
-			guess = newguess // update gues
-
-			// fmt.Println("newGuess: ", newguess)
+			guess = newguess // update guess
 		}
 	}
 
+// Compute the absolute value of a float64 number
 func Abs(x float64) float64 {
 	if x < 0 {
 		return -x
