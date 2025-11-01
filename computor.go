@@ -162,7 +162,7 @@ func reduceEquation(t map[int]float64)(map[int]float64, string){
     if firstTerm {
         builder.WriteString("0")
     }
-	builder.WriteString("= 0")
+	builder.WriteString(" = 0")
 	
 	fmt.Println("Reduced form:", builder.String())
 
@@ -175,8 +175,9 @@ func getDegree(t map[int]float64) int{
 		return 0
 	}
 	degree := 0
-	for exp, _ := range t {
-		if exp > degree {
+	for exp, coeff := range t {
+		// Only consider non-zero coefficients
+		if Abs(coeff) > EPSILON && exp > degree {
 			degree = exp
 		}
 	}
@@ -188,24 +189,36 @@ func solveEquation(t map[int]float64, degree int){
 	// fmt.Printf("terms : %v\n degree : %v\n", t, degree)
 	switch degree {
 		case 0:
-			if Abs(t[0]) < EPSILON {
-				fmt.Println("Each real number is a solutions")
-			} else {
-				fmt.Println("There is No solution")
-			}
+			 // Check if constant term exists and is non-zero
+        if val, exists := t[0]; exists && Abs(val) >= EPSILON {
+            fmt.Println("There is no solution")
+        } else {
+            fmt.Println("Each real number is a solution")
+        }
 		case 1:
-			a := t[1]
-			b := t[0]
-			x := -b / a
-			// Handle -0 display to 0
-			if Abs(x) < EPSILON {
-				x = 0
-			}
-			fmt.Printf("The solution is: \n%v\n", x)
+			 a := t[1]
+        b := t[0]
+        
+        // Safety check for division by zero
+        if Abs(a) < EPSILON {
+            fmt.Println("Error: Invalid linear equation")
+            return
+        }
+        
+        x := -b / a
+        if Abs(x) < EPSILON {
+            x = 0
+        }
+        fmt.Printf("The solution is:\n%v\n", x)
 		case 2:
 			a := t[2]
 			b := t[1]
 			c := t[0]
+			 // Safety check for division by zero
+        if Abs(a) < EPSILON {
+            fmt.Println("Error: Invalid quadratic equation")
+            return
+        }
 			discriminant := b*b -4 * a * c
 			// fmt.Printf("discriminant: %v\n : ", discriminant)
 			if discriminant > 0 {
@@ -220,6 +233,9 @@ func solveEquation(t map[int]float64, degree int){
 			}else {
 			// COMPLEX solutions
 				realPart := -b / (2 * a)
+				if Abs(realPart) < EPSILON {
+				realPart = 0  // Fix -0 display
+			}
 				imagPart := mySqrt(-discriminant) / (2 * a)
 				fmt.Println("Discriminant is negative, the two complex solutions are:")
 				fmt.Printf("%f - %f * i\n", realPart, imagPart)
